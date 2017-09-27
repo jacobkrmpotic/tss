@@ -4,75 +4,102 @@ import sys
 from time import sleep
 from curses import *
 
-
-# if file name not specified use "hello" as visual
-if (len(sys.argv) == 1):
-    text = "hello"
-else:
-    filename = sys.argv[1]
-    try:
-        f = open(filename, "r")
-        text = f.read()
-        f.close()
-    except FileNotFoundError:
-        print("File not found, exiting.")
-        exit()
-
-# remove ending new lines
-while (text[-1] == "\n"):
-    text = text[:-1]
-
-
-# vis is the text object to be display
-vis = text.split("\n")
-
+# function to print a list of strings to an ncurses window
+# where the index of the function is the height and the
+# length of the string at the index is the width
 def printlist(scr, l, y, x):
     z = 0
     while (z < len(l)):
         scr.addstr(y+z, x, l[z])
         z += 1
-        
 
-# vl is length of vis, we assume the first element
-# is the longest length as vis must be a rectangle
+# if no text file is specified, this is what will be printed
+default = ("### ### ###\n" +
+           " #  #   #  \n" +
+           " #  ### ###\n" +
+           " #    #   #\n" +
+           " #  ### ###")
+
+
+# if file name not specified use "hello" as visual
+if (len(sys.argv) == 1):
+    text = default
+else:
+    filename = sys.argv[1] # filename is first argument
+    try:
+        f = open(filename, "r")
+        text = f.read()
+        f.close()
+    except FileNotFoundError: # exit if failure to open
+        print("File not found, exiting.")
+        exit()
+
+# remove ending new lines 
+while (text[-1] == "\n"):
+    text = text[:-1]
+
+# vis is the text object to be display
+vis = text.split("\n")
+
+# vl is the maximum length of the text being displayed
 vl = 0
 for x in vis:
     if len(x) > vl:
         vl = len(x)
 
-
 # vh is the vertical height of vis
 vh = len(vis)
 
-win = initscr()
-noecho()
-cbreak()
-curs_set(0)
+# initialize ncurses
+win = initscr() 
+noecho() # dont echo user input
+cbreak() # abruptly end the program with ctrl+c
+curs_set(0) # invisible cursor
+
+# momentum
 x_dir = 1 # 1 = going right, -1 = going left
 y_dir = 1 # 1 = going down, -1 = going up
 
+# coordinates of vis
 x = 0 # starting x position of vis
 y = 0 # starting y position of vis
+
 while 1:
+    # window bounds
     my, mx = win.getmaxyx()
 
-    # if new position is not out of horizontal bounds
+    # if new position is out of horizontal bounds
+    # change direction in x
     if (x + x_dir + vl > mx or x + x_dir < 0):
         if (x_dir == 1):
             x_dir = -1
         else:
             x_dir = 1
     # if new y position is not out of bounds
+    # change y direction
     if (y + y_dir + vh > my or y + y_dir < 0):
         if (y_dir == 1):
             y_dir = -1
         else:
             y_dir = 1
-    # move
+
+    # set new coordinates
     y += y_dir
     x += x_dir
 
+    # erase last screen
     win.erase()
+    # print new screen
     printlist(win, vis, y, x)
+    # display
     win.refresh()
+    # sleep 1/24 seconds
     sleep(0.041666)
+
+# end ncurses
+win.endwin()
+echo()
+curs_set(1)
+
+# kill program
+exit()
