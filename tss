@@ -47,6 +47,17 @@ for x in vis:
     if len(x) > vl:
         vl = len(x)
 
+# Use spaces to extend all lines to the same length
+x = 0
+while (x < len(vis)):
+    # replace tabs with spaces (tabs glitch with ncurses a bit)
+    vis[x] = vis[x].replace("\t", "    ")
+    # extend lines
+    while (len(vis[x]) < vl):
+        vis[x] += " "
+    x += 1
+
+
 # vh is the vertical height of vis
 vh = len(vis)
 
@@ -87,14 +98,14 @@ while 1:
     y += y_dir
     x += x_dir
 
-    # erase last screen
-    win.erase()
     # print new screen
     printlist(win, vis, y, x)
     # display
     win.refresh()
     # sleep 1/24 seconds
     sleep(0.041666)
+    # erase last screen
+    win.erase()
 
 # end ncurses
 win.endwin()
